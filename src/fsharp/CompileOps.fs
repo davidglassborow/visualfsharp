@@ -2116,6 +2116,7 @@ type TcConfigBuilder =
       mutable optsOn        : bool (* optimizations are turned on *)
       mutable optSettings   : Optimizer.OptimizationSettings 
       mutable emitTailcalls : bool
+      mutable deterministic : bool
 #if PREFERRED_UI_LANG
       mutable preferredUiLang: string option
 #endif
@@ -2280,6 +2281,7 @@ type TcConfigBuilder =
           optsOn        = false 
           optSettings   = Optimizer.OptimizationSettings.Defaults
           emitTailcalls = true
+          deterministic = false
 #if PREFERRED_UI_LANG
           preferredUiLang = None
 #endif
@@ -2769,6 +2771,7 @@ type TcConfig private (data : TcConfigBuilder,validate:bool) =
     member x.doFinalSimplify    = data.doFinalSimplify
     member x.optSettings        = data.optSettings
     member x.emitTailcalls      = data.emitTailcalls
+    member x.deterministic      = data.deterministic
 #if PREFERRED_UI_LANG
     member x.preferredUiLang    = data.preferredUiLang
 #endif

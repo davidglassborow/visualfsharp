@@ -1948,6 +1948,7 @@ let main4 (Args (ctok, tcConfig, errorLogger: ErrorLogger, ilGlobals, ilxMainMod
                   { ilg = ilGlobals
                     pdbfile=pdbfile
                     emitTailcalls = tcConfig.emitTailcalls
+                    deterministic = tcConfig.deterministic
                     showTimes = tcConfig.showTimes
                     portablePDB = tcConfig.portablePDB
                     embeddedPDB = tcConfig.embeddedPDB
