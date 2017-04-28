@@ -720,9 +720,11 @@ module AttributeHelpers =
             None
 
     // Try to find an AssemblyVersion attribute 
-    let TryFindVersionAttribute g attrib attribName attribs =
+    let TryFindVersionAttribute g attrib attribName attribs deterministic =
         match TryFindStringAttribute g attrib attribs with
         | Some versionString ->
+             if deterministic && versionString.Contains("*") then
+                 errorR(Error(FSComp.SR.fscAssemblyWildcardAndDeterminism(attribName, versionString), Range.rangeStartup))
              try Some (IL.parseILVersion versionString)
              with e -> 
                  warning(Error(FSComp.SR.fscBadAssemblyVersion(attribName, versionString), Range.rangeStartup))
@@ -1818,7 +1820,7 @@ let main1(Args (ctok, tcGlobals, tcImports: TcImports, frameworkTcImports, gener
 
     // Try to find an AssemblyVersion attribute 
     let assemVerFromAttrib = 
-        match AttributeHelpers.TryFindVersionAttribute tcGlobals "System.Reflection.AssemblyVersionAttribute" "AssemblyVersionAttribute" topAttrs.assemblyAttrs with
+        match AttributeHelpers.TryFindVersionAttribute tcGlobals "System.Reflection.AssemblyVersionAttribute" "AssemblyVersionAttribute" topAttrs.assemblyAttrs tcConfig.deterministic with
         | Some v -> 
            match tcConfig.version with 
            | VersionNone -> Some v
