@@ -890,6 +890,7 @@ type ImageDebugDirectory =
     val SizeOfData : int32
     val AddressOfRawData : int32
     val PointerToRawData : int32
+
     
 [<ComImport; Interface>]
 [<Guid("0B97726E-9E6D-4f05-9A26-424022093CAA"); InterfaceType(ComInterfaceType.InterfaceIsIUnknown)>]
@@ -1002,6 +1003,24 @@ type ISymUnmanagedWriter2 =
                           isect : int *
                           offset : int -> unit
 
+[<ComImport; Interface>]
+[<Guid("22DAEAF2-70F6-4EF1-B0C3-984F0BF27BFD"); InterfaceType(ComInterfaceType.InterfaceIsIUnknown);>]//SuppressUnmanagedCodeSecurity
+type ISymUnmanagedWriter7 =
+        // ISymUnmanagedWriter6
+        abstract InitializeDeterministic: emiiter : nativeint * stream : IStream -> unit
+        // ISymUnmanagedWriter7
+        abstract UpdateSignatureByHashingContent: [<In>] buffer:byte[] * size:int -> unit
+
+[<DefaultDllImportSearchPaths(DllImportSearchPath.AssemblyDirectory ||| DllImportSearchPath.SafeDirectories)>]
+[<DllImport("Microsoft.DiaSymReader.Native.x86.dll", EntryPoint = "CreateSymWriter")>]
+//extern void CreateSymWriter32( nativeint g, [<Out>] obj res )
+extern void CreateSymWriter32( Guid & _g,  obj & _d )
+
+[<DefaultDllImportSearchPaths(DllImportSearchPath.AssemblyDirectory ||| DllImportSearchPath.SafeDirectories)>]
+[<DllImport("Microsoft.DiaSymReader.Native.amd64.dll", EntryPoint = "CreateSymWriter")>]
+extern void CreateSymWriter64( Guid & _g,  obj & _d )
+
+
 type PdbWriter = { symWriter : ISymUnmanagedWriter2 }
 type PdbDocumentWriter = { symDocWriter : ISymUnmanagedDocumentWriter }  (* pointer to pDocumentWriter COM object *)
 type idd =
@@ -1024,9 +1043,29 @@ let pdbInitialize (binaryName:string) (pdbName:string) =
     mdd.OpenScope(binaryName, 0x1, &IID_IMetaDataEmit, &o) // 0x1 = ofWrite
     let emitterPtr = Marshal.GetComInterfaceForObject(o, typeof<IMetadataEmit>)
     let writer = 
-        try 
+        try
+            let mutable guid = Guid("0AE2DEB0-F901-478b-BB9F-881EE8066788");
+            let mutable symWriter = Unchecked.defaultof<obj>
+            try
+                if IntPtr.Size = 4 then
+                    CreateSymWriter32(& guid,& symWriter)
+                else
+                    CreateSymWriter64(& guid, & symWriter)
+            with e -> 
+                let m = e.Message
+                m |> ignore
+                ()
+            
+
+         
             let writer = Activator.CreateInstance(System.Type.GetTypeFromProgID("CorSymWriter_SxS")) :?> ISymUnmanagedWriter2
-            writer.Initialize(emitterPtr, pdbName, Unchecked.defaultof<IStream>, true)
+            
+            if writer :? ISymUnmanagedWriter7 then
+                let write6 = writer :?> ISymUnmanagedWriter7
+                write6.InitializeDeterministic(emitterPtr,Unchecked.defaultof<IStream>)
+            else
+                writer.Initialize(emitterPtr, pdbName, Unchecked.defaultof<IStream>, true)
+
             writer
         finally  
             // Marshal.GetComInterfaceForObject adds an extra ref for emitterPtr

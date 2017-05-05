@@ -4268,6 +4268,8 @@ let writeBinaryAndReportMappings (outfile,
                     // write the debug raw data as given us by the PDB writer 
                     os2.BaseStream.Seek (int64 (textV2P i.iddChunk.addr), SeekOrigin.Begin) |> ignore
                     if i.iddChunk.size < i.iddData.Length then failwith "Debug data area is not big enough.  Debug info may not be usable"
+                    for x in 4..19 do
+                        i.iddData.[x] <- 0uy
                     writeBytes os2 i.iddData
                 os2.Dispose()
             with e -> 

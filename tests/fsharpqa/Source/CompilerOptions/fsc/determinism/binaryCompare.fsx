@@ -16,6 +16,10 @@ let compareFiles pair =
     let correct = areSame pair = shouldBeSame
     if not correct then 
         printfn "Expected %s and %s to be %s" (fst pair) (snd pair) (if shouldBeSame then "same" else "different")
+        let load = System.IO.File.ReadAllBytes
+        let pairs = Array.zip (pair |> fst |> load) (pair |> snd |> load)
+        pairs |> Array.iteri (fun i (a,b) -> if a <> b then printfn "%i: %A %A" i a b )
+
     correct
 
 // Check all pairs of files are exactly the same

@@ -710,6 +710,8 @@ set HOSTED_COMPILER=1
 
 if "%TEST_NET40_FSHARPQA_SUITE%" == "1" (
 
+    cls
+
     set FSC=!FSCBINPATH!\fsc.exe
     set FSCOREDLLPATH=!FSCBinPath!\FSharp.Core.dll
     set PATH=!FSCBINPATH!;!PATH!
